@@ -44,7 +44,7 @@ def render_login():
             with st.container(border=True):
                 st.subheader("Student Portal")
                 # Default login values applied here
-                student_user = st.text_input("Roll Number", value="230030101001", key="student_user")
+                student_user = st.text_input("Roll Number", key="student_user")
                 if student_user:
                     user_info = db.get_user_by_username(student_user.strip())
                     if user_info and user_info['role'] == 'student':
@@ -55,7 +55,7 @@ def render_login():
                     else:
                         st.warning("Roll number not found. Please check and try again.")
                         
-                student_pass = st.text_input("Password", value="pass123", type="password", key="student_pass")
+                student_pass = st.text_input("Password", type="password", key="student_pass")
                 student_login = st.button("Login as Student", type="primary", use_container_width=True)
                 
                 if student_login:
