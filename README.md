@@ -1,6 +1,6 @@
 # 🗳️ Streamlit Online Voting System
 
-A secure, web-based class election voting platform converted from PHP/MySQL into a modern Python & Streamlit web application.
+Class Election Voting System is a lightweight, single-page web application designed to handle secure student elections. Originally built in PHP/MySQL and modernized into a completely serverless Python and Streamlit architecture, this platform eliminates the need for heavy local servers. It features a dual-role authentication system (Student/Admin), a live interactive analytics dashboard using Plotly, an automated approval queue for custom candidate requests, and instant digital receipt generation with scannable QR codes for voter verification.
 
 ## ✨ Features
 * **Authentication**: Student & Admin role-based login system.
@@ -13,7 +13,7 @@ A secure, web-based class election voting platform converted from PHP/MySQL into
 
 1. Clone the repository:
    ```bash
-   git clone <your-github-repo-url>
+   git clone https://github.com/niketsah007/online-voting-system
    cd voting_system
 
 2. Install dependencies:
