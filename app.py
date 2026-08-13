@@ -5,6 +5,7 @@ import qrcode
 from io import BytesIO
 import plotly.express as px
 import database as db
+import os
 
 # Initialize Database Schema
 db.init_db()
@@ -28,43 +29,66 @@ def generate_qr(text_data):
     return buf.getvalue()
 
 # ---------------------------------------------------------
-# LOGIN SCREEN (login.php replacement)
+# LOGIN SCREEN (Tabbed Interface)
 # ---------------------------------------------------------
 def render_login():
     st.markdown("<h2 style='text-align: center;'>🔒 Class Election Voting System</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: gray;'>Secure Student & Admin Portal</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: gray;'>Official Election Portal</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        with st.container(border=True):
-            username_input = st.text_input("Roll Number / Username")
-            password_input = st.text_input("Password", type="password")
-            login_button = st.button("Login", type="primary", use_container_width=True)
-            
-            if login_button:
-                if not username_input or not password_input:
-                    st.warning("Please fill in all credentials.")
-                else:
-                    user = db.get_user_by_username(username_input.strip())
-                    if user and user['password'] == password_input:
-                        st.session_state["logged_in"] = True
-                        st.session_state["user"] = dict(user)
-                        st.success("Login successful!")
-                        st.rerun()
+        tab1, tab2 = st.tabs(["🎓 Student Login", "🛡️ Admin Login"])
+        
+        # --- STUDENT LOGIN TAB ---
+        with tab1:
+            with st.container(border=True):
+                st.subheader("Student Portal")
+                # Default login values applied here
+                student_user = st.text_input("Roll Number", value="230030101001", key="student_user")
+                student_pass = st.text_input("Password", value="pass123", type="password", key="student_pass")
+                student_login = st.button("Login as Student", type="primary", use_container_width=True)
+                
+                if student_login:
+                    if not student_user or not student_pass:
+                        st.warning("Please fill in all credentials.")
                     else:
-                        st.error("❌ Invalid Username or Password!")
-            
-            st.caption("ℹ️ **Default Accounts:**")
-            st.caption("- Student: `101` | Password: `pass123`")
-            st.caption("- Admin: `admin` | Password: `admin123`")
+                        user = db.get_user_by_username(student_user.strip())
+                        if user and user['password'] == student_pass and user['role'] == 'student':
+                            st.session_state["logged_in"] = True
+                            st.session_state["user"] = dict(user)
+                            st.success("Login successful!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Invalid Roll Number or Password!")
+
+        # --- ADMIN LOGIN TAB ---
+        with tab2:
+            with st.container(border=True):
+                st.subheader("Admin Portal")
+                # No hints or default values for Admin
+                admin_user = st.text_input("Admin Username", key="admin_user")
+                admin_pass = st.text_input("Password", type="password", key="admin_pass")
+                admin_login = st.button("Login as Admin", type="primary", use_container_width=True)
+                
+                if admin_login:
+                    if not admin_user or not admin_pass:
+                        st.warning("Please fill in all credentials.")
+                    else:
+                        user = db.get_user_by_username(admin_user.strip())
+                        if user and user['password'] == admin_pass and user['role'] == 'admin':
+                            st.session_state["logged_in"] = True
+                            st.session_state["user"] = dict(user)
+                            st.success("Admin login successful!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Invalid Admin Credentials!")
 
 # ---------------------------------------------------------
-# STUDENT DASHBOARD (dashboard.php & vote.php replacement)
+# STUDENT DASHBOARD 
 # ---------------------------------------------------------
 def render_student_dashboard():
     user = db.get_user_by_username(st.session_state["user"]["username"])
     
-    # Top Bar
     c1, c2 = st.columns([4, 1])
     with c1:
         st.title("🗳️ Student Election Dashboard")
@@ -77,11 +101,23 @@ def render_student_dashboard():
             
     st.divider()
 
+    # -- VOLUNTARY STUDENT PASSWORD CHANGE --
+    with st.expander("⚙️ Account Settings (Change Password)"):
+        with st.form("voluntary_pass_change"):
+            vol_new_pass = st.text_input("Enter New Password", type="password")
+            submit_new_pass = st.form_submit_button("Update Password")
+            if submit_new_pass:
+                if vol_new_pass.strip():
+                    db.change_user_password(user['id'], vol_new_pass.strip())
+                    st.success("Your password has been updated securely!")
+                else:
+                    st.error("Password cannot be empty.")
+
     # Force Password Change if using default password
     if user['password'] == 'pass123':
-        st.warning("⚙️ **Security Alert:** Please change your default password.")
-        new_pass = st.text_input("New Password", type="password")
-        if st.button("Update Password"):
+        st.warning("⚙️ **Security Alert:** Please change your default password to continue.")
+        new_pass = st.text_input("New Password", type="password", key="force_new_pass")
+        if st.button("Update Password", key="force_update_btn"):
             if new_pass.strip():
                 db.change_user_password(user['id'], new_pass.strip())
                 st.success("Password updated successfully!")
@@ -90,7 +126,6 @@ def render_student_dashboard():
                 st.error("Password cannot be empty.")
         st.stop()
 
-    # Case 1: Already Voted OR Custom Name Approved -> Show Digital Receipt
     if user['has_voted'] == 1 or user['custom_name_status'] == 'approved':
         st.balloons()
         with st.container(border=True):
@@ -115,15 +150,14 @@ def render_student_dashboard():
                 st.markdown(f"**Timestamp:** `{timestamp}`")
                 st.markdown(f"**Status:** `VERIFIED & LOGGED`")
             with rc2:
+                # Text-based QR code for direct mobile scanning
                 receipt_text = f"OFFICIAL ELECTION RECEIPT\n----------------------\nRoll No: {user['username']}\nCandidate: {candidate_name}\nStatus: VERIFIED & LOGGED\nTimestamp: {timestamp}"
                 qr_bytes = generate_qr(receipt_text)
-                st.image(qr_bytes, caption="Digital Receipt Verification QR", width=150)
+                st.image(qr_bytes, caption="Scan to view receipt on phone", width=150)
                 
-    # Case 2: Custom Name Request Pending
     elif user['custom_name_status'] == 'pending':
         st.info(f"⏳ **Custom Name Request Pending:** Your requested candidate ' **{user['custom_name']}** ' is currently under administrator review.")
 
-    # Case 3: Ready to Vote
     else:
         if user['custom_name_status'] == 'rejected':
             st.error("❌ Your previous custom candidate request was rejected. Please select an existing candidate below.")
@@ -154,14 +188,25 @@ def render_student_dashboard():
                     st.error("Please enter a valid candidate name.")
 
 # ---------------------------------------------------------
-# ADMIN DASHBOARD (admin.php replacement)
+# ADMIN DASHBOARD 
 # ---------------------------------------------------------
 def render_admin_dashboard():
-    c1, c2 = st.columns([4, 1])
+    c1, c2, c3 = st.columns([4, 1, 1])
     with c1:
         st.title("📊 Live Election Results & Admin Panel")
     with c2:
-        if st.button("Logout", type="secondary"):
+        # -- DOWNLOAD DATABASE BUTTON --
+        if os.path.exists("voting_system.db"):
+            with open("voting_system.db", "rb") as file:
+                st.download_button(
+                    label="💾 Database",
+                    data=file,
+                    file_name="voting_system.db",
+                    mime="application/octet-stream",
+                    use_container_width=True
+                )
+    with c3:
+        if st.button("Logout", type="secondary", use_container_width=True):
             st.session_state["logged_in"] = False
             st.session_state["user"] = None
             st.rerun()
@@ -171,7 +216,6 @@ def render_admin_dashboard():
     candidates = db.get_candidates()
     total_votes = sum([c['vote_count'] for c in candidates])
     
-    # Metrics Row
     m1, m2, m3 = st.columns(3)
     m1.metric("Total Votes Cast", total_votes)
     m2.metric("Total Candidates", len(candidates))
@@ -179,10 +223,24 @@ def render_admin_dashboard():
     m3.metric("Leading Candidate", leading_name)
 
     st.divider()
+    
+    # -- ADMIN PASSWORD RESET TOOL --
+    with st.expander("🔑 Reset a Student's Password"):
+        with st.form("reset_pass_form"):
+            roll_to_reset = st.text_input("Enter Student Roll No (e.g., 230030101001)")
+            submit_reset = st.form_submit_button("Reset to Default ('pass123')")
+            if submit_reset:
+                user_to_reset = db.get_user_by_username(roll_to_reset.strip())
+                if user_to_reset:
+                    db.change_user_password(user_to_reset['id'], "pass123")
+                    st.success(f"Successfully reset password for {roll_to_reset} back to 'pass123'.")
+                else:
+                    st.error("Student Roll No not found in the database.")
+                    
+    st.divider()
 
     col_chart, col_moderation = st.columns([1.5, 1])
 
-    # Column 1: Doughnut Chart & Tally
     with col_chart:
         st.subheader("🍩 Live Results Breakdown")
         if total_votes > 0:
@@ -205,7 +263,6 @@ def render_admin_dashboard():
             st.write(f"**{c['name']}** — {c['vote_count']} votes ({pct:.1f}%)")
             st.progress(pct / 100)
 
-    # Column 2: Moderation Queue
     with col_moderation:
         st.subheader("📑 Pending Custom Names")
         pending_list = db.get_pending_custom_names()
