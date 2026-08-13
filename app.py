@@ -102,7 +102,7 @@ def render_student_dashboard():
     c1, c2 = st.columns([4, 1])
     with c1:
         st.title("🗳️ Student Election Dashboard")
-        st.subheader(f"Welcome, Student ID: `{user['username']}`")
+        st.subheader(f"Welcome, Student - {user['name']}")
     with c2:
         if st.button("Logout", type="secondary"):
             st.session_state["logged_in"] = False
