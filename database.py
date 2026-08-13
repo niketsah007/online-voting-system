@@ -11,7 +11,7 @@ def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 1. Users Table
+    # 1. Users Table (Includes 'name' column)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,13 +35,12 @@ def init_db():
         );
     """)
 
-    # --- 3. WHERE TO CHANGE ADMIN DETAILS ---
-    # Change 'admin' and 'admin123' below to your preferred username and password.
+    # 3. Admin Account
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='admin';")
     if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO users (username, password, role) VALUES ('Niket', 'Niket@1994', 'admin');")
+        cursor.execute("INSERT INTO users (username, name, password, role) VALUES ('admin', 'System Admin', 'admin123', 'admin');")
 
-    # --- 4. DEFAULT STUDENTS LIST ---
+    # 4. Students List (3 values: username, name, password)
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='student';")
     if cursor.fetchone()[0] == 0:
         sample_students = [
@@ -103,22 +102,21 @@ def init_db():
             ('230030101061', 'Yogesh Chandra Pandey', 'pass123'),
             ('230030101063', 'Zeeshan Ansari', 'pass123')
         ]
-        cursor.executemany("INSERT INTO users (username, password, role) VALUES (?, ?, 'student');", sample_students)
+        # Updated to 3 placeholders: (?, ?, ?, 'student')
+        cursor.executemany("INSERT INTO users (username, name, password, role) VALUES (?, ?, ?, 'student');", sample_students)
 
-    # --- 5. DEFAULT CANDIDATES LIST ---
+    # 5. Candidates
     cursor.execute("SELECT COUNT(*) FROM candidates;")
     if cursor.fetchone()[0] == 0:
         sample_candidates = [
-            ('Shivam Singh', 0), 
-            ('Niket Sah', 0),
-            ('Both',0)
+            ('Monitor Name One', 0), 
+            ('Monitor Name Two', 0)
         ]
         cursor.executemany("INSERT INTO candidates (name, vote_count) VALUES (?, ?);", sample_candidates)
 
     conn.commit()
     conn.close()
 
-# Helper Query Functions
 def get_user_by_username(username):
     conn = get_connection()
     cursor = conn.cursor()
