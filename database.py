@@ -109,8 +109,9 @@ def init_db():
     cursor.execute("SELECT COUNT(*) FROM candidates;")
     if cursor.fetchone()[0] == 0:
         sample_candidates = [
-            ('Monitor Name One', 0), 
-            ('Monitor Name Two', 0)
+            ('Shivam Kumar Singh', 0), 
+            ('Niket Sah', 0),
+            ('Both-(Shivam - Official, Niket - Unofficial)', 0)
         ]
         cursor.executemany("INSERT INTO candidates (name, vote_count) VALUES (?, ?);", sample_candidates)
 
