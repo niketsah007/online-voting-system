@@ -115,7 +115,7 @@ def render_student_dashboard():
                 st.markdown(f"**Timestamp:** `{timestamp}`")
                 st.markdown(f"**Status:** `VERIFIED & LOGGED`")
             with rc2:
-                receipt_url = f"https://my-election-system.app/verify/{user['id']}"
+                receipt_url = "https://online-voting-system-niket.streamlit.app"
                 qr_bytes = generate_qr(receipt_url)
                 st.image(qr_bytes, caption="Digital Receipt Verification QR", width=150)
                 
