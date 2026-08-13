@@ -38,7 +38,7 @@ def init_db():
     # Change 'admin' and 'admin123' below to your preferred username and password.
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='admin';")
     if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');")
+        cursor.execute("INSERT INTO users (username, password, role) VALUES ('Niket', 'Niket@1994', 'admin');")
 
     # --- 4. DEFAULT STUDENTS LIST ---
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='student';")
@@ -70,8 +70,9 @@ def init_db():
     cursor.execute("SELECT COUNT(*) FROM candidates;")
     if cursor.fetchone()[0] == 0:
         sample_candidates = [
-            ('Monitor Name One', 0), 
-            ('Monitor Name Two', 0)
+            ('Shivam Singh', 0), 
+            ('Niket Sah', 0),
+            ('Both',0)
         ]
         cursor.executemany("INSERT INTO candidates (name, vote_count) VALUES (?, ?);", sample_candidates)
 
