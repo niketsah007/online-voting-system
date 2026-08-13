@@ -34,19 +34,45 @@ def init_db():
         );
     """)
 
-    # Seed Default Admin & Sample Students if empty
-    cursor.execute("SELECT COUNT(*) FROM users;")
+    # --- 3. WHERE TO CHANGE ADMIN DETAILS ---
+    # Change 'admin' and 'admin123' below to your preferred username and password.
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role='admin';")
     if cursor.fetchone()[0] == 0:
-        # Admin Account (username: admin, pass: admin123)
         cursor.execute("INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');")
-        # Sample Student Accounts (pass: pass123)
-        sample_students = [('101', 'pass123'), ('102', 'pass123'), ('103', 'pass123'), ('104', 'pass123')]
+
+    # --- 4. DEFAULT STUDENTS LIST ---
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role='student';")
+    if cursor.fetchone()[0] == 0:
+        sample_students = [
+            ('230030101001', 'pass123'), ('230030101003', 'pass123'), ('230030101004', 'pass123'),
+            ('230030101005', 'pass123'), ('230030101006', 'pass123'), ('230030101007', 'pass123'),
+            ('230030101008', 'pass123'), ('230030101009', 'pass123'), ('230030101010', 'pass123'),
+            ('230030101011', 'pass123'), ('230030101012', 'pass123'), ('230030101013', 'pass123'),
+            ('230030101014', 'pass123'), ('230030101015', 'pass123'), ('230030101016', 'pass123'),
+            ('230030101017', 'pass123'), ('230030101018', 'pass123'), ('230030101019', 'pass123'),
+            ('230030101020', 'pass123'), ('230030101021', 'pass123'), ('230030101022', 'pass123'),
+            ('230030101023', 'pass123'), ('230030101024', 'pass123'), ('230030101025', 'pass123'),
+            ('230030101026', 'pass123'), ('230030101027', 'pass123'), ('230030101028', 'pass123'),
+            ('230030101029', 'pass123'), ('230030101030', 'pass123'), ('230030101032', 'pass123'),
+            ('230030101033', 'pass123'), ('230030101034', 'pass123'), ('230030101035', 'pass123'),
+            ('230030101036', 'pass123'), ('230030101037', 'pass123'), ('230030101038', 'pass123'),
+            ('230030101039', 'pass123'), ('230030101040', 'pass123'), ('230030101041', 'pass123'),
+            ('230030101042', 'pass123'), ('230030101043', 'pass123'), ('230030101044', 'pass123'),
+            ('230030101046', 'pass123'), ('230030101047', 'pass123'), ('230030101048', 'pass123'),
+            ('230030101050', 'pass123'), ('230030101051', 'pass123'), ('230030101052', 'pass123'),
+            ('230030101053', 'pass123'), ('230030101055', 'pass123'), ('230030101056', 'pass123'),
+            ('230030101057', 'pass123'), ('230030101058', 'pass123'), ('230030101059', 'pass123'),
+            ('230030101060', 'pass123'), ('230030101061', 'pass123'), ('230030101063', 'pass123')
+        ]
         cursor.executemany("INSERT INTO users (username, password, role) VALUES (?, ?, 'student');", sample_students)
 
-    # Seed Default Candidates if empty
+    # --- 5. DEFAULT CANDIDATES LIST ---
     cursor.execute("SELECT COUNT(*) FROM candidates;")
     if cursor.fetchone()[0] == 0:
-        sample_candidates = [('Alex Smith', 0), ('Sarah Johnson', 0), ('Michael Brown', 0)]
+        sample_candidates = [
+            ('Monitor Name One', 0), 
+            ('Monitor Name Two', 0)
+        ]
         cursor.executemany("INSERT INTO candidates (name, vote_count) VALUES (?, ?);", sample_candidates)
 
     conn.commit()
@@ -80,11 +106,7 @@ def cast_vote(user_id, candidate_id):
 def submit_custom_name(user_id, custom_name):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE users 
-        SET custom_name = ?, custom_name_status = 'pending' 
-        WHERE id = ?;
-    """, (custom_name.strip(), user_id))
+    cursor.execute("UPDATE users SET custom_name = ?, custom_name_status = 'pending' WHERE id = ?;", (custom_name.strip(), user_id))
     conn.commit()
     conn.close()
 
@@ -99,21 +121,16 @@ def get_pending_custom_names():
 def approve_custom_name(user_id):
     conn = get_connection()
     cursor = conn.cursor()
-    
-    # Fetch custom name
     cursor.execute("SELECT custom_name FROM users WHERE id = ?;", (user_id,))
     row = cursor.fetchone()
     if row and row['custom_name']:
         c_name = row['custom_name'].strip()
-        
-        # Check if candidate exists
         cursor.execute("SELECT id FROM candidates WHERE name = ?;", (c_name,))
         cand = cursor.fetchone()
         if cand:
             cursor.execute("UPDATE candidates SET vote_count = vote_count + 1 WHERE id = ?;", (cand['id'],))
         else:
             cursor.execute("INSERT INTO candidates (name, vote_count) VALUES (?, 1);", (c_name,))
-            
         cursor.execute("UPDATE users SET custom_name_status = 'approved', has_voted = 1 WHERE id = ?;", (user_id,))
         conn.commit()
     conn.close()
