@@ -115,8 +115,8 @@ def render_student_dashboard():
                 st.markdown(f"**Timestamp:** `{timestamp}`")
                 st.markdown(f"**Status:** `VERIFIED & LOGGED`")
             with rc2:
-                receipt_url = "https://online-voting-system-niket.streamlit.app"
-                qr_bytes = generate_qr(receipt_url)
+                receipt_text = f"OFFICIAL ELECTION RECEIPT\n----------------------\nRoll No: {user['username']}\nCandidate: {candidate_name}\nStatus: VERIFIED & LOGGED\nTimestamp: {timestamp}"
+                qr_bytes = generate_qr(receipt_text)
                 st.image(qr_bytes, caption="Digital Receipt Verification QR", width=150)
                 
     # Case 2: Custom Name Request Pending
