@@ -38,7 +38,7 @@ def init_db():
     # 3. Admin Account
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='admin';")
     if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO users (username, name, password, role) VALUES ('admin', 'System Admin', 'admin123', 'admin');")
+        cursor.execute("INSERT INTO users (username, name, password, role) VALUES ('niket', 'System Admin', 'Niket@1994', 'admin');")
 
     # 4. Students List (3 values: username, name, password)
     cursor.execute("SELECT COUNT(*) FROM users WHERE role='student';")
